@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static CitizenFX.Core.Native.API;
+using CitizenFX.Core;
+namespace BurnoutFX.Client
+{
+    public class Track
+    {
+        public bool showWaypoints { get; set; } = true;
+
+        public float checkpointRadius { get; set; } = 24.0f;
+        
+        public float checkpointTransparency { get; set; } = 1.0f;
+        
+        public int mapBlipID { get; set; } = 315;
+        
+        public int mapBlipColour { get; set; } = 5;
+        
+        public Marker[] checkpoints { get; set; }
+        
+        public Track(Marker[] trackCheckpoints)
+        {
+            checkpoints = trackCheckpoints;
+        }
+    }
+}

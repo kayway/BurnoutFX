@@ -1,0 +1,12 @@
+﻿<Project Sdk="CitizenFX.Sdk.Client/0.2.3">
+    <ItemGroup>
+        <Compile Include="../Shared/**/*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Dependencies\Shared\Newtonsoft.Json.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+      <PackageReference Update="CitizenFX.Core.Client" Version="1.0.4517" />
+    </ItemGroup>
+</Project>
