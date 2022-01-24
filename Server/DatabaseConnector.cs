@@ -45,10 +45,10 @@ namespace BurnoutFX.Server
             return connectedPlayer;
         }
         /// <summary>
-        /// 
+        /// Queries the Tracks database.
         /// </summary>
-        /// <returns></returns>
-        public static async Task<Dictionary<string, Tuple<uint, uint, string>>> RetreiveTracks()
+        /// <returns>Enabled Tracks Marker Data.</returns>
+        public static async Task<Dictionary<string, Tuple<uint, uint, string>>> RetrieveTracks()
         {
             DatabaseApp database = new DatabaseApp();
             Dictionary<string, Tuple<uint, uint, string>> trackMarkers = new Dictionary<string, Tuple<uint, uint, string>>();
@@ -179,7 +179,7 @@ namespace BurnoutFX.Server
         {
             if (obj == null || obj == DBNull.Value)
             {
-                return default(T); // returns the default value for the Type
+                return default(T); 
             }
             else
             {

@@ -12,6 +12,7 @@ namespace BurnoutFX.Server
 {
     public class GameManager : BaseScript
     {
+        //Contains the start markers for all tracks in the format track name, marker data.
         public static Dictionary<string, Tuple<uint, uint, string>> MarkerData = new Dictionary<string, Tuple<uint, uint, string>>();
 
         public static Dictionary<ActiveGame, List<Player>> activeGames = new Dictionary<ActiveGame, List<Player>>();
@@ -135,7 +136,7 @@ namespace BurnoutFX.Server
         }
         private static async void GetGameMarkers()
         {
-            MarkerData = await DatabaseConnector.RetreiveTracks();
+            MarkerData = await DatabaseConnector.RetrieveTracks();
             Debug.WriteLine(MarkerData.Count.ToString());
         }
         [EventHandler("RequestMarkerData")]
@@ -143,7 +144,7 @@ namespace BurnoutFX.Server
         {
             string trackMarkerData = JsonConvert.SerializeObject(MarkerData);
             string gameMarkerData = JsonConvert.SerializeObject(availableGameMarkers);
-            TriggerClientEvent(player, "RetreiveMarkerData", trackMarkerData, gameMarkerData);
+            TriggerClientEvent(player, "RetrieveMarkerData", trackMarkerData, gameMarkerData);
         }
     }
 }

@@ -7,8 +7,8 @@
     </PropertyGroup>
   
     <ItemGroup>
-      <PackageReference Include="CitizenFX.Core.Server" Version="1.0.4517" />
-      <PackageReference Include="MySqlConnector" Version="1.3.12" />
+      <PackageReference Include="CitizenFX.Core.Server" Version="1.0.5254" />
+      <PackageReference Include="MySqlConnector" Version="2.1.2" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\Dependencies\Shared\Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>

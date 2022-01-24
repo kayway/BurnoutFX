@@ -7,6 +7,6 @@
       <HintPath>..\Dependencies\Shared\Newtonsoft.Json.dll</HintPath>
       <Private>true</Private>
     </Reference>
-      <PackageReference Update="CitizenFX.Core.Client" Version="1.0.4517" />
+      <PackageReference Update="CitizenFX.Core.Client" Version="1.0.5254" />
     </ItemGroup>
 </Project>
