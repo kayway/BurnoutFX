@@ -13,7 +13,7 @@ namespace BurnoutFX.Server
     public class GameManager : BaseScript
     {
         //Contains the start markers for all tracks in the format track name, marker data.
-        public static Dictionary<string, Tuple<uint, uint, string>> MarkerData = new Dictionary<string, Tuple<uint, uint, string>>();
+        public static string MarkerData = "";
 
         public static Dictionary<ActiveGame, List<Player>> activeGames = new Dictionary<ActiveGame, List<Player>>();
         
@@ -105,12 +105,12 @@ namespace BurnoutFX.Server
             newGame.GameID = activeGames.Count + 1;
             activeGames.Add(newGame, players);
             var trackData = await DatabaseConnector.RetreiveTrackData(newGame.TrackName);
-            TriggerClientEvent(player, "retreiveGameData", newGame.GameID, trackData.Item1, trackData.Item2, trackData.Item3);
+            TriggerClientEvent(player, "RetrieveGameData", newGame.GameID, trackData.Item1, trackData.Item2, trackData.Item3);
             if (newGame.Mode != GameMode.timetrial)
             {
                 availableGameMarkers.Add(newGame.GameName, markerData);
                 Debug.WriteLine(markerData);
-                TriggerClientEvent("RetreiveNewGameMarker", newGame.GameName, markerData);
+                TriggerClientEvent("RetrieveNewGameMarker", newGame.GameName, markerData);
             }
         }
         /// <summary>
@@ -129,22 +129,24 @@ namespace BurnoutFX.Server
                     gameName = kvp.Key.GameName;
                     kvp.Value.Add(player);
                     var trackData = await DatabaseConnector.RetreiveTrackData(kvp.Key.TrackName);
-                   TriggerClientEvent(player, "retreiveGameData", kvp.Key.GameID, trackData.Item1, trackData.Item2, trackData.Item3);
+                    TriggerClientEvent(player, "RetrieveGameData", kvp.Key.GameID, trackData.Item1, trackData.Item2, trackData.Item3);
                     break;
                 }
             }
         }
         private static async void GetGameMarkers()
         {
-            MarkerData = await DatabaseConnector.RetrieveTracks();
-            Debug.WriteLine(MarkerData.Count.ToString());
+            Dictionary<string, Tuple<uint, uint, string>> trackMarkerData = await DatabaseConnector.RetrieveTracks();
+            MarkerData = JsonConvert.SerializeObject(trackMarkerData);
+
         }
         [EventHandler("RequestMarkerData")]
         private static void SendGameMarkers([FromSource]Player player)
         {
-            string trackMarkerData = JsonConvert.SerializeObject(MarkerData);
+            while(MarkerData == "") { }
+            Debug.WriteLine("Hello");
             string gameMarkerData = JsonConvert.SerializeObject(availableGameMarkers);
-            TriggerClientEvent(player, "RetrieveMarkerData", trackMarkerData, gameMarkerData);
+            TriggerClientEvent(player, "RetrieveMarkerData", MarkerData, gameMarkerData);
         }
     }
 }

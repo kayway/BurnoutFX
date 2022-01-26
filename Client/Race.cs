@@ -53,7 +53,6 @@ namespace BurnoutFX.Client
         {
             TriggerServerEvent("StartedGame");
             int checkpointID = 0;
-            //float distanceToFinish = 0.0f;
 
             Marker currentCheckpoint = TrackData[checkpointID], nextCheckpoint = TrackData[checkpointID + 1], previousCheckpoint = TrackData[checkpointID - 1];
 
@@ -64,7 +63,6 @@ namespace BurnoutFX.Client
             SetNewWaypoint(currentCheckpoint.X, currentCheckpoint.Y);
             while (CurrentBPlayer.State == PlayerState.InGame)
             {  
-                // previousCheckpoint = TrackData[checkpointID-1];
                 float drawTime = (float)Game.GameTime - (float)startTime;
                 Vector3 queryVector = new Vector3(currentCheckpoint.X, currentCheckpoint.Y, currentCheckpoint.Z);
                 float checkpointDistance = Game.PlayerPed.Position.DistanceToSquared(queryVector);
@@ -74,7 +72,6 @@ namespace BurnoutFX.Client
                 DrawGameText(checkpointID.ToString(), 0.5f, 0.5f);
                 if (Game.PlayerPed.Position.DistanceToSquared(queryVector) < CheckpointRadius)
                 {
-                    //checkpointID++;
                     DeleteCheckpoint(checkpointHandle);
                     RemoveBlip(ref checkpointBlip);
                     if (checkpointID +1 == TrackData.Length)

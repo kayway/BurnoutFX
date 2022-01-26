@@ -26,9 +26,9 @@ namespace BurnoutFX.Client
         [Tick]
         public Task OnTick()
         {
-            DrawGameText("Dosh: " + CurrentBPlayer.Dosh, 0.8f, 0.1f);
-            DrawGameText("Rep: " + CurrentBPlayer.Rep, 0.8f, 0.2f);
-            DrawGameText("Infamy: " + CurrentBPlayer.Infamy, 0.8f, 0.3f);
+            //DrawGameText("Dosh: " + CurrentBPlayer.Dosh, 0.8f, 0.1f);
+            //DrawGameText("Gameplay Camera:" + GetGameplayCamCoords().ToString(), 0.8f, 0.2f);
+            //DrawGameText("Player Ped: " + Game.PlayerPed.Position.ToString(), 0.8f, 0.3f);
             return Task.FromResult(0);
         }
 
@@ -48,29 +48,31 @@ namespace BurnoutFX.Client
         public static void DrawGameText(string text, float xCoords, float yCoords, float zCoords = 0.0f, 
             int r = 255, int g = 255, int b = 255, int a = 255, float scaleX = 0.5f, float scaleY = 0.5f)
         {
-            SetTextFont(4);
-            SetTextColour(r, g, b, a);
-            SetTextDropshadow(0, 0, 0, 0, 255);
-            SetTextEdge(4, 0, 0, 0, 255);
-            SetTextDropShadow();
-            SetTextOutline();
-            SetTextEntry("STRING");
-            SetTextCentre(true);
-            AddTextComponentString(text);
+            bool onScreen = true;
+            float drawX = xCoords, drawY = yCoords;
             if (zCoords != 0.0f)
             {
-                //var onScreenLocation = new Vector2();
-                //World3dToScreen2d(xCoords, yCoords, zCoords, ref onScreenLocation.X, ref onScreenLocation.Y);
+                drawX = 0.0f; 
+                drawY = 0.0f;
+                onScreen = World3dToScreen2d(xCoords, yCoords, zCoords, ref drawX, ref drawY);
                 float distance = GetGameplayCamCoords().DistanceToSquared(new Vector3(xCoords, yCoords, zCoords));
-                float scale = (1.0f / distance) * (1.0f / GetGameplayCamFov() * 100);
-                SetTextScale(scaleX * scale, scaleY * scale);
-                SetDrawOrigin(xCoords, yCoords, zCoords, 0);
-                DrawText(0.0f, 0.0f);
+                float scale = ((1.0f / distance) * 2.0f) * ((1.0f /GetGameplayCamFov()) * 100.0f) * scaleX;
+                SetTextScale(0, scale);
             }
-            else
+            if (onScreen)
             {
-                SetTextScale(scaleX, scaleY);
-                DrawText(xCoords, yCoords);
+
+                SetTextFont(4);
+                SetTextProportional(true);
+                SetTextColour(r, g, b, a);
+                SetTextDropshadow(0, 0, 0, 0, 255);
+                SetTextEdge(4, 0, 0, 0, 255);
+                SetTextDropShadow();
+                SetTextOutline();
+                SetTextEntry("STRING");
+                SetTextCentre(true);
+                AddTextComponentString(text);
+                DrawText(drawX, drawY);
             }
         }
     }

@@ -101,7 +101,7 @@ namespace BurnoutFX.Server
             return trackData;
         }
         /// <summary>
-        /// 
+        /// Submit the player's time for the track.
         /// </summary>
         /// <param name="playerID"></param>
         /// <param name="time"></param>
