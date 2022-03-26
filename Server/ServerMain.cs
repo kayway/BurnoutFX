@@ -21,13 +21,14 @@ namespace BurnoutFX.Server
         [EventHandler("requestPlayerData")]
         private async void sendPlayerData([FromSource] Player player)
         {
-            Debug.WriteLine("hello");
             string licenseID = player.Identifiers["License"];
+            BurnoutPlayer onlinePlayer = await DatabaseConnector.InitializePlayerData(licenseID, player.Name);
             if (!onlinePlayers.ContainsKey(licenseID))
             {
-                onlinePlayers.Add(licenseID, await DatabaseConnector.InitializePlayerData(licenseID, player.Name));
+                await Delay(1000);
+                onlinePlayers.Add(licenseID, onlinePlayer);
             }
-            BurnoutPlayer onlinePlayer = onlinePlayers[licenseID];
+            Debug.WriteLine(onlinePlayer.Dosh.ToString());
             TriggerClientEvent(player, "retrievePlayerData", onlinePlayer.Dosh, onlinePlayer.Rep, onlinePlayer.Infamy);
         }
     }

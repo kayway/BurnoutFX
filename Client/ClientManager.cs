@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
-
 using BurnoutFX.Shared;
 using CitizenFX.Core;
 using static BurnoutFX.Client.ClientMain;
-using Newtonsoft.Json;
+using static BurnoutFX.Client.ClientUI;
 using static CitizenFX.Core.Native.API;
 namespace BurnoutFX.Client
 {
@@ -36,9 +34,15 @@ namespace BurnoutFX.Client
         public ClientManager()
         {
             Debug.WriteLine("Hello");
+            queueOperations();
+            
+            Tick += GameHUDHandler;
+        }
+        private async void queueOperations()
+        {
+            await Delay(1000);
             TriggerServerEvent("RequestMarkerData");
             Tick += MarkerHandler;
-            Tick += GameHUDHandler;
         }
         private async Task GameHUDHandler()
         {
@@ -105,7 +109,7 @@ namespace BurnoutFX.Client
                     float markerDistance = Game.PlayerPed.Position.DistanceToSquared(new Vector3(marker.X, marker.Y, marker.Z));
                     if (markerDistance < 100.0f)
                     {
-                        ClientMain.DrawGameText(kvp.Key, marker.X, marker.Y, marker.Z + 0.45f,255,255,255,255,10.0f);
+                        ClientUI.DrawGameText(kvp.Key, marker.X, marker.Y, marker.Z + 0.45f,255,255,255,255,10.0f);
                         
                         if (Game.IsControlPressed(0, Control.VehicleAccelerate) && Game.IsControlPressed(0, Control.VehicleBrake))
                         {
@@ -159,7 +163,9 @@ namespace BurnoutFX.Client
                 Marker marker = JsonConvert.DeserializeObject<Marker>(kvp.Value.Item3);
                 int blipID = marker.AddBlip(markerName, blipColour, blipIcon);
                 blips.Add(blipID);
-                TrackMarkers.Add(markerName, marker);
+                if(!TrackMarkers.ContainsKey(markerName))
+                    TrackMarkers.Add(markerName, marker);
+                
             }
             Dictionary<string, string> gameMarkers = JsonConvert.DeserializeObject<Dictionary<string, string>>(gameMarkerData);
             foreach (KeyValuePair<string, string> kvp in gameMarkers)

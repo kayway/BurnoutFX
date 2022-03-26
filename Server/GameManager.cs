@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Newtonsoft.Json;
 using CitizenFX.Core;
 using BurnoutFX.Shared;
@@ -55,7 +51,6 @@ namespace BurnoutFX.Server
             bool firstFinished = true;
             foreach (KeyValuePair<ActiveGame, List<Player>> kvp in activeGames)
             {
-                Debug.WriteLine("HI");
                 if (kvp.Value.Contains(player))
                 { 
                     if (kvp.Key.Mode != GameMode.timetrial)
@@ -134,17 +129,17 @@ namespace BurnoutFX.Server
                 }
             }
         }
+
         private static async void GetGameMarkers()
         {
             Dictionary<string, Tuple<uint, uint, string>> trackMarkerData = await DatabaseConnector.RetrieveTracks();
+            await Delay(100);
             MarkerData = JsonConvert.SerializeObject(trackMarkerData);
 
         }
         [EventHandler("RequestMarkerData")]
         private static void SendGameMarkers([FromSource]Player player)
         {
-            while(MarkerData == "") { }
-            Debug.WriteLine("Hello");
             string gameMarkerData = JsonConvert.SerializeObject(availableGameMarkers);
             TriggerClientEvent(player, "RetrieveMarkerData", MarkerData, gameMarkerData);
         }

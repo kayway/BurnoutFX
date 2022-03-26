@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using static CitizenFX.Core.Native.API;
@@ -21,12 +18,12 @@ namespace BurnoutFX.Client
         public Task OnTick()
         {
             if (driftScore > 10)
-            DrawGameText("Drift: " + driftScore.ToString(), 0.4f, 0.1f);
+                Boost++;
             if (slipstreamScore > 10)
-            DrawGameText("Slipstream: " + slipstreamScore.ToString(), 0.5f, 0.1f);
+                Boost++;
             if (airScore > 10)
-            DrawGameText("Air: " + airScore.ToString(), 0.6f, 0.1f);
-            return Task.FromResult(0);
+                Boost++;
+            return Task.FromResult(updateRate);
         }
         [EventHandler("onClientResourceStart")]
         private async void counters()
@@ -35,18 +32,28 @@ namespace BurnoutFX.Client
             {
                 if (!isDriverValid(true))
                 {
+                    await Delay(3000);
+
                     driftScore = 0;
                     slipstreamScore = 0;
                 }
-                else if (GetVehicleCurrentSlipstreamDraft(Game.PlayerPed.CurrentVehicle.NetworkId) == 0.0f)
-                    slipstreamScore = 0;
-                if (!isDrifting())
-                    driftScore = 0;
-                if (!isDriverValid(false))
-                    airScore = 0; 
+                else if (isDriverValid(false))
+                {
+                    airScore = 0;
+                }
+                else
+                {
+                    if (GetVehicleCurrentSlipstreamDraft(Game.PlayerPed.CurrentVehicle.NetworkId) == 0.0f)
+                        slipstreamScore = 0;
+                    if (!isDrifting())
+                    {
+                        driftScore = 0;
+                    }
+                }
                 airScore++;
                 slipstreamScore++;
                 driftScore++;
+
                 await Delay(updateRate);
             }
         }
@@ -61,15 +68,11 @@ namespace BurnoutFX.Client
             if (!ped.IsDead && ped.SeatIndex == VehicleSeat.Driver && !ped.IsInWater && !ped.IsInBoat && !ped.IsInFlyingVehicle)
             {
                 if (onGround)
-                {
                     if (ped.CurrentVehicle.IsOnAllWheels && !ped.IsInAir)
                         return true;
-                }
                 else if (!onGround)
-                {
                     if (ped.CurrentVehicle.IsInAir)
                         return true;
-                }
             }
             return false;
         }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BurnoutFX.Shared;
 using CitizenFX.Core;
 using static BurnoutFX.Client.ClientMain;
+using static BurnoutFX.Client.ClientUI;
 using static CitizenFX.Core.Native.API;
 
 namespace BurnoutFX.Client
