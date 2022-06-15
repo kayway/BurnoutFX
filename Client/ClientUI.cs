@@ -1,6 +1,5 @@
 using CitizenFX.Core;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using static CitizenFX.Core.Native.API;
 using static BurnoutFX.Client.ClientMain;
 
@@ -8,34 +7,83 @@ namespace BurnoutFX.Client
 {
     public class ClientUI : BaseScript
     {
+        //scaleform ID
+        private static int scale = -1;
         private bool opened = false;
+        public static bool NearMarker = false;
         public ClientUI()
         {
-            Tick += drivingHUDHandler;
+            queueOperations();
         }
-
-        private Task drivingHUDHandler()
+        private async void queueOperations()
+        {
+            await Delay(5000);
+            Tick += drivingHUDHandler;
+        } 
+        private async Task drivingHUDHandler()
         {
             if (Game.PlayerPed.IsInVehicle())
             {
+                scale = RequestScaleformMovie("INSTRUCTIONAL_BUTTONS");
+                while (!HasScaleformMovieLoaded(scale)) { await Delay(0); }
+                if (NearMarker)
+                {
+                    scale = RequestScaleformMovie("INSTRUCTIONAL_BUTTONS");
+                    while (!HasScaleformMovieLoaded(scale))
+                    {
+                        await Delay(0);
+                    }
+                    DrawScaleformMovieFullscreen(scale, 255, 255, 255, 0, 0);
+                    BeginScaleformMovieMethod(scale, "CLEAR_ALL");
+                    EndScaleformMovieMethod();
+                    BeginScaleformMovieMethod(scale, "SET_DATA_SLOT");
+                    ScaleformMovieMethodAddParamInt(0);
+                    PushScaleformMovieMethodParameterString("~INPUT_VEH_DUCK~");
+                    PushScaleformMovieMethodParameterString($"Start Timetrial");
+                    EndScaleformMovieMethod();
+
+                    BeginScaleformMovieMethod(scale, "SET_DATA_SLOT");
+                    ScaleformMovieMethodAddParamInt(1);
+                    PushScaleformMovieMethodParameterString("~INPUT_VEH_CIN_CAM~");
+                    PushScaleformMovieMethodParameterString($"Start Race");
+                    EndScaleformMovieMethod();
+
+                    BeginScaleformMovieMethod(scale, "DRAW_INSTRUCTIONAL_BUTTONS");
+                    ScaleformMovieMethodAddParamInt(0);
+                    EndScaleformMovieMethod();
+                }
+                while (NearMarker)
+                {
+                    DrawScaleformMovieFullscreen(scale, 255, 255, 255, 255, 0);
+                    await Delay(0);
+                }
                 if (!opened)
                 {
-                    SendNuiMessage(JsonConvert.SerializeObject(new { type = "enable-drivingUI", data = "true" }));
+                    SendNuiMessage("{\"type\":\"enabledrivingUI\", \"enable\":true}");
                     opened = true;
+                    Debug.WriteLine("DrivingUI open");
                 }
+                DrawGameText("Boost: " + Boost.CurrentBoost, 0.9f, 0.2f);
             }
             else if (opened)
-                SendNuiMessage(JsonConvert.SerializeObject(new { type = "enable-drivingUI", data = "false" }));
-            
-            return Task.FromResult(0);
+            {
+                SendNuiMessage("{\"type\":\"enabledrivingUI\", \"enable\":false}");
+                opened = false;
+            }
+            await Task.FromResult(0);
         }
         public static void UpdateBoostHUD(int boost)
         {
+            Debug.WriteLine("Boost Triggered: " + boost);
             SendNuiMessage($"{{\"type\":\"boost\", \"amount\":{boost}}}");
         }
-        public async void setDosh(int dosh)
+        public static void SendStunt(string type, bool enabled)
         {
-            StatSetInt((uint)GetHashKey("MP0_WALLET_BALANCE"), (int)dosh, true);
+            SendNuiMessage($"{{\"type\":\"stunt\", \"stunt\":{type}\", \"enabled\":{enabled}}}");
+        }
+        public static async void SetDosh(int dosh)
+        {
+            StatSetInt((uint)GetHashKey("MP0_WALLET_BALANCE"), dosh, true);
             N_0x170f541e1cadd1de(true);
             SetMultiplayerWalletCash();
             N_0x170f541e1cadd1de(false);

@@ -4,59 +4,103 @@ using CitizenFX.Core;
 using static CitizenFX.Core.Native.API;
 
 using static BurnoutFX.Client.ClientMain;
+using static BurnoutFX.Client.ClientUI;
 namespace BurnoutFX.Client
 {
+
     class StuntCounter : BaseScript
     {
-        private int driftScore, slipstreamScore, airScore, updateRate = 1;
+        private enum stunts
+        {
+            drift,
+            air,
+            slipstream,
+            destruction,
+            takedown,
+            playerTakedown
+        }
+        public static bool DriftBoost = false, AirBoost = false, SlipBoost = false;
+        private int driftScore = 0, slipstreamScore = 0, airScore = 0;
+        private int driftTick = 0, slipTick = 0, airTick = 0;
+        private bool driftOpened = false, airOpened = false, slipOpened = false;
+        //Need to figure out how to make it send a nui message only once without having bools for everything <_>
 
         public StuntCounter()
         {
             SetEnableVehicleSlipstreaming(true);
+            Tick += stuntHandler;
         }
-        [Tick]
-        public Task OnTick()
+        private async Task stuntHandler()
         {
-            if (driftScore > 10)
-                Boost++;
-            if (slipstreamScore > 10)
-                Boost++;
-            if (airScore > 10)
-                Boost++;
-            return Task.FromResult(updateRate);
-        }
-        [EventHandler("onClientResourceStart")]
-        private async void counters()
-        {
-            while (true)
+            if (Game.PlayerPed.SeatIndex == VehicleSeat.Driver && Game.PlayerPed.IsAlive)
             {
-                if (!isDriverValid(true))
+                if (isDrifting())
                 {
-                    await Delay(3000);
-
-                    driftScore = 0;
-                    slipstreamScore = 0;
-                }
-                else if (isDriverValid(false))
-                {
-                    airScore = 0;
-                }
-                else
-                {
-                    if (GetVehicleCurrentSlipstreamDraft(Game.PlayerPed.CurrentVehicle.NetworkId) == 0.0f)
-                        slipstreamScore = 0;
-                    if (!isDrifting())
+                    driftScore++;
+                    driftTick = Game.GameTime + 3000;
+                    if (!driftOpened)
                     {
-                        driftScore = 0;
+                        driftOpened = true;
+                        SendStunt("drift", driftOpened);
                     }
                 }
-                airScore++;
-                slipstreamScore++;
-                driftScore++;
+                else if (driftScore != 0 && Game.GameTime >= driftTick)
+                {
+                    driftScore = 0;
+                    if (driftOpened)
+                    {
+                        driftOpened = false;
+                        SendStunt("drift", driftOpened);
+                    }
+                }
+                if (isDriverValid(false))
+                {
+                    airScore++;
+                    airTick = Game.GameTime + 3000;
+                    if (!airOpened)
+                    {
+                        airOpened = true;
+                        SendStunt("air", airOpened);
+                    }
+                }
+                else if (airScore != 0 && Game.GameTime >= airTick)
+                {
+                    airScore = 0;
+                    if (airOpened)
+                    {
+                        airOpened = false;
+                        SendStunt("air", airOpened);
+                    }
+                }
+                if (GetVehicleCurrentSlipstreamDraft(Game.PlayerPed.CurrentVehicle.NetworkId) > 0.0f)
+                {
+                    slipstreamScore++;
+                    slipTick = Game.GameTime + 3000;
+                    if (!slipOpened)
+                    {
+                        slipOpened = true;
+                        SendStunt("slip", slipOpened);
+                    }
 
-                await Delay(updateRate);
+                }
+                else if (slipstreamScore != 0 && Game.GameTime >= slipTick)
+                {
+                    slipstreamScore = 0;
+                    if (slipOpened)
+                    {
+                        slipOpened = false;
+                        SendStunt("slip", slipOpened);
+                    }
+                }
+
+                DriftBoost = driftScore > 10;
+                SlipBoost = slipstreamScore > 10;
+                AirBoost = airScore > 10;
+
+                await Task.FromResult(0);
             }
         }
+       
         /// <summary>
         /// processes player peds current situation
         /// </summary>
@@ -65,7 +109,7 @@ namespace BurnoutFX.Client
         private bool isDriverValid(bool onGround)
         {
             Ped ped = Game.PlayerPed;
-            if (!ped.IsDead && ped.SeatIndex == VehicleSeat.Driver && !ped.IsInWater && !ped.IsInBoat && !ped.IsInFlyingVehicle)
+            if (!ped.IsInWater && !ped.IsInBoat && !ped.IsInFlyingVehicle)
             {
                 if (onGround)
                     if (ped.CurrentVehicle.IsOnAllWheels && !ped.IsInAir)
@@ -79,7 +123,8 @@ namespace BurnoutFX.Client
         
         private bool isDrifting()
         {
-  
+            if (!isDriverValid(true))
+                return false;
             Vehicle vehicle = Game.PlayerPed.CurrentVehicle;
             if (vehicle == null)
                 return false;

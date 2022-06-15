@@ -1,7 +1,5 @@
 ﻿using MySqlConnector;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace BurnoutFX.Server
 {

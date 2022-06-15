@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Threading.Tasks;
 using BurnoutFX.Shared;
 using CitizenFX.Core;
 using static BurnoutFX.Client.ClientMain;
 using static BurnoutFX.Client.ClientUI;
+
 using static CitizenFX.Core.Native.API;
 namespace BurnoutFX.Client
 {
@@ -21,11 +23,6 @@ namespace BurnoutFX.Client
         // Time before starting the game default is 10 seconds (10000ms)
         private int startDelay = 10000;
         
-        //scaleform ID
-        private static int scale = -1;
-
-        private static bool gameHUDActive = false;
-        
         // Current game the player is in.
         public static ActiveGame currentGame;
         
@@ -33,51 +30,7 @@ namespace BurnoutFX.Client
         
         public ClientManager()
         {
-            Debug.WriteLine("Hello");
-            queueOperations();
-            
-            Tick += GameHUDHandler;
-        }
-        private async void queueOperations()
-        {
-            await Delay(1000);
-            TriggerServerEvent("RequestMarkerData");
             Tick += MarkerHandler;
-        }
-        private async Task GameHUDHandler()
-        {
-            if (gameHUDActive)
-            {
-                scale = RequestScaleformMovie("INSTRUCTIONAL_BUTTONS");
-                while (!HasScaleformMovieLoaded(scale))
-                {
-                    await Delay(0);
-                }
-                DrawScaleformMovieFullscreen(scale, 255, 255, 255, 0, 0);
-                BeginScaleformMovieMethod(scale, "CLEAR_ALL");
-                EndScaleformMovieMethod();
-                BeginScaleformMovieMethod(scale, "SET_DATA_SLOT");
-                ScaleformMovieMethodAddParamInt(0);
-                PushScaleformMovieMethodParameterString("~INPUT_VEH_DUCK~");
-                PushScaleformMovieMethodParameterString($"Start Timetrial");
-                EndScaleformMovieMethod();
-
-                BeginScaleformMovieMethod(scale, "SET_DATA_SLOT");
-                ScaleformMovieMethodAddParamInt(1);
-                PushScaleformMovieMethodParameterString("~INPUT_VEH_CIN_CAM~");
-                PushScaleformMovieMethodParameterString($"Start Race");
-                EndScaleformMovieMethod();
-
-                BeginScaleformMovieMethod(scale, "DRAW_INSTRUCTIONAL_BUTTONS");
-                ScaleformMovieMethodAddParamInt(0);
-                EndScaleformMovieMethod();
-            }
-            while(gameHUDActive)
-            {
-                DrawScaleformMovieFullscreen(scale, 255, 255, 255, 255, 0); 
-                await Delay(0);
-            }
-            await Task.FromResult(0);
         }
         /// <summary>
         /// Handles all of the track and game markers.
@@ -86,8 +39,6 @@ namespace BurnoutFX.Client
         {
             while (CurrentBPlayer.State == PlayerState.None)
             {
-                scale = RequestScaleformMovie("INSTRUCTIONAL_BUTTONS");
-                while (!HasScaleformMovieLoaded(scale)) { await Delay(0); }
                 foreach (KeyValuePair<string, Marker> kvp in GameMarkers)
                 {
                     Marker marker = kvp.Value;
@@ -109,11 +60,11 @@ namespace BurnoutFX.Client
                     float markerDistance = Game.PlayerPed.Position.DistanceToSquared(new Vector3(marker.X, marker.Y, marker.Z));
                     if (markerDistance < 100.0f)
                     {
-                        ClientUI.DrawGameText(kvp.Key, marker.X, marker.Y, marker.Z + 0.45f,255,255,255,255,10.0f);
+                       DrawGameText(kvp.Key, marker.X, marker.Y, marker.Z + 0.45f,255,255,255,255,10.0f);
                         
                         if (Game.IsControlPressed(0, Control.VehicleAccelerate) && Game.IsControlPressed(0, Control.VehicleBrake))
                         {
-                            gameHUDActive = true;
+                            NearMarker = true;
                             Game.DisableControlThisFrame(0, Control.VehicleDuck);
                             Game.DisableControlThisFrame(0, Control.VehicleRocketBoost);
                             Game.DisableControlThisFrame(0, Control.VehicleDropProjectile);
@@ -137,7 +88,7 @@ namespace BurnoutFX.Client
                         }
                         else
                         {
-                            gameHUDActive = false;
+                            NearMarker = false;
                         }
                     }
                 }
@@ -153,8 +104,8 @@ namespace BurnoutFX.Client
         [EventHandler("RetrieveMarkerData")]
         private void ParseMarkerData(string trackMarkerData, string gameMarkerData)
         {
-            Debug.WriteLine("Hello2");
             Dictionary<string, Tuple<uint, uint, string>> trackMarkers = JsonConvert.DeserializeObject<Dictionary<string, Tuple<uint, uint, string>>>(trackMarkerData);
+            ITraceWriter traceWriter = new MemoryTraceWriter();
             foreach(KeyValuePair<string, Tuple<uint, uint, string>> kvp in trackMarkers)
             {
                 string markerName = kvp.Key;
@@ -175,6 +126,7 @@ namespace BurnoutFX.Client
                 blips.Add(blipID);
                 GameMarkers.Add(kvp.Key, marker);
             }
+            Debug.WriteLine(traceWriter.ToString());
         }
         /// <summary>
         /// Sends Game and marker data to the server.

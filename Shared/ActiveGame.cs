@@ -1,9 +1,4 @@
-﻿using CitizenFX.Core;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BurnoutFX.Shared
+﻿namespace BurnoutFX.Shared
 {
     public enum GameMode
     {

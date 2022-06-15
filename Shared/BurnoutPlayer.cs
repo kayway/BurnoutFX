@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-#if CLIENT
-using CitizenFX.Core;
-using static CitizenFX.Core.Native.API;
-#endif
-namespace BurnoutFX.Shared
+﻿namespace BurnoutFX.Shared
 {
     public enum PlayerState
     {
